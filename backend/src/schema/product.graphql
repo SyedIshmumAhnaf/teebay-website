@@ -3,8 +3,8 @@ type Product {
   name: String!
   description: String!
   price: Float!
-  user: User! 
-  categories: [Category!]!
+  user: User!
+  categories: [Category!]
   createdAt: String!
   updatedAt: String!
 }
@@ -16,8 +16,8 @@ type Category {
 }
 
 type Query {
-  products(skip: Int, take: Int): [Product!]! 
-  product(id: ID!): Product 
+  products(skip: Int, take: Int, categoryIds: [ID], userId: ID, excludeCurrentUser: Boolean): [Product!]!
+  product(id: ID!): Product
   categories: [Category!]!
 }
 

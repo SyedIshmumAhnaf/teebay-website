@@ -1,49 +1,44 @@
 const { ApolloServer } = require('apollo-server');
 const { PrismaClient } = require('@prisma/client');
+const jwt = require('jsonwebtoken');
+const productResolvers = require('./resolvers/product');
+const authResolvers = require('./resolvers/auth');
 const fs = require('fs');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-
-//using merge to combine multiple resolvers
-const { merge } = require('lodash');
-const authResolvers = require('./resolvers/auth');
-const productResolvers = require('./resolvers/product');
 
 
 const prisma = new PrismaClient();
-const resolvers = merge(authResolvers, productResolvers);
 
-const { loadFilesSync } = require('@graphql-tools/load-files');
-const { makeExecutableSchema } = require('@graphql-tools/schema');
+//Load schema
+const productSchema = fs.readFileSync(path.join(__dirname, './schema/product.graphql'), 'utf8');
+const authSchema = fs.readFileSync(path.join(__dirname, './schema/auth.graphql'), 'utf8');
+ 
 
-const typeDefs = loadFilesSync('./src/schema/**/*.graphql');
-const schema = makeExecutableSchema({
-  typeDefs,
-  resolvers,
-});
+const typeDefs = [productSchema, authSchema];
+const resolvers = [productResolvers, authResolvers]
 
 const server = new ApolloServer({
-  schema,
+    typeDefs,
+    resolvers,
   context: ({ req }) => {
-    //const token = req.headers.authorization || '';
-    const token = req.headers.authorization?.split(" ")[1];
-    //const userId = getUser(token.replace('Bearer ', ''));
-    let userId = null;
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.split(' ')[1];
+        let userId = null;
 
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, 'your_secret_key');
-        userId = decoded.userId;
-      } catch (err) {
-        console.error('Invalid token:', err.message);
-      }
-    }
 
-    return { userId, prisma };
-  },
-});
+        if(token){
+           try{
+               const decodedToken = jwt.verify(token, 'your_secret_key');
+               userId = decodedToken.userId;
+             } catch (error){
+               console.error("JWT Verification Error: ", error)
+            }
+        }
 
-server.listen({port: 4000}).then(({ url }) => {
-  console.log(`Server ready at ${url}`);
-});
+        return { prisma, userId };
+      },
+  });
+  
+  server.listen().then(({ url }) => {
+      console.log(`🚀 Server ready at ${url}`);
+  });

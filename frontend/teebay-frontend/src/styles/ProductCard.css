@@ -1,0 +1,41 @@
+.product-item {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .product-item .product-details {
+    flex: 1;
+  }
+  
+  .product-item .product-details h3 {
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .product-item .product-details p {
+    font-size: 14px;
+    color: #666;
+  }
+
+.delete-btn {
+    position: absolute; /* Absolute to product-card */
+    top: 10px; /* Adjusted for alignment */
+    right: 10px; /* Adjusted for alignment */
+    left: 400px;
+    background-color: transparent;
+    color: #ff4d4f;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.delete-btn:hover {
+    color: #d9363e;
+}

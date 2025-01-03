@@ -18,6 +18,7 @@ const Login = () => {
       const response = await login({ variables: formData });
         if(response && response.data){
           console.log('Login Success:', response.data);
+          localStorage.setItem('token', response.data.login.token)
         }
     } catch (err) {
       console.error('Login Failed:', err.message);
