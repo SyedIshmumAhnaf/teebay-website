@@ -10,14 +10,6 @@ const resolvers = {
     },
   },
   Mutation: {
-/*    register: async (_, { username, email, password }, { prisma }) => {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await prisma.user.create({
-        data: { username, email, password: hashedPassword },
-      });
-      const token = jwt.sign({ userId: user.id }, "your_secret_key");
-      return { token, user };
-    },*/
     register: async (_, { username, email, password }, { prisma }) => {
       try {
         const hashedPassword = await bcrypt.hash(password, 10);

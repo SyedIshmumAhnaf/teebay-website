@@ -1,30 +1,45 @@
 const { ApolloServer } = require('apollo-server');
 const { PrismaClient } = require('@prisma/client');
-const resolvers = require('./resolvers/auth');
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const prisma = new PrismaClient();
+//using merge to combine multiple resolvers
+const { merge } = require('lodash');
+const authResolvers = require('./resolvers/auth');
+const productResolvers = require('./resolvers/product');
 
-const getUser = (token) => {
-  try {
-    if (token) {
-      const decoded = jwt.verify(token, "your_secret_key");
-      return decoded.userId;
-    }
-  } catch (err) {
-    return null;
-  }
-};
+
+const prisma = new PrismaClient();
+const resolvers = merge(authResolvers, productResolvers);
+
+const { loadFilesSync } = require('@graphql-tools/load-files');
+const { makeExecutableSchema } = require('@graphql-tools/schema');
+
+const typeDefs = loadFilesSync('./src/schema/**/*.graphql');
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
 
 const server = new ApolloServer({
-  typeDefs: fs.readFileSync(path.join(__dirname, './schema/auth.graphql'), 'utf8'),
-  resolvers,
+  schema,
   context: ({ req }) => {
-    const token = req.headers.authorization || '';
-    const userId = getUser(token.replace('Bearer ', ''));
+    //const token = req.headers.authorization || '';
+    const token = req.headers.authorization?.split(" ")[1];
+    //const userId = getUser(token.replace('Bearer ', ''));
+    let userId = null;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, 'your_secret_key');
+        userId = decoded.userId;
+      } catch (err) {
+        console.error('Invalid token:', err.message);
+      }
+    }
+
     return { userId, prisma };
   },
 });

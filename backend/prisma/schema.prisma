@@ -7,9 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  category    String
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name, userId, category])
+}
+
 model User {
   id       Int      @id @default(autoincrement())
   username String   @unique
   email    String   @unique
   password String
+  products Product[] // One-to-many relation with Product
 }
