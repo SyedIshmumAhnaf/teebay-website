@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { REGISTER_MUTATION } from '../apollo/mutations';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
-  const [register, { loading, error, data }] = useMutation(REGISTER_MUTATION);  //Extract data
+  const [register, { loading, error }] = useMutation(REGISTER_MUTATION);
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,11 +18,14 @@ const Register = () => {
     e.preventDefault();
     try {
       const response = await register({ variables: formData });
-        if(response && response.data) {
-            console.log('Registration Success:', response.data);
-        }
+      if (response && response.data) {
+        console.log('Registration Success:', response.data);
+        navigate('/login');
+      }
     } catch (err) {
       console.error('Registration Failed:', err.message);
+      // Set the error message from the backend
+      setErrorMessage(err.message);
     }
   };
 
@@ -55,7 +61,9 @@ const Register = () => {
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
-      {error && <p className="error">{error.message}</p>}
+      {/* Display error messages */}
+      {errorMessage && <p className="error">{errorMessage}</p>}
+      {error && !errorMessage && <p className="error">{error.message}</p>}
       <p>
         Already have an account? <a href="/login">Sign In</a>
       </p>

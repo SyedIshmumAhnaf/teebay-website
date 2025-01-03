@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MainLayout from "./layouts/MainLayout";
+import './styles/auth.css';
 
 const App = () => {
   return (
