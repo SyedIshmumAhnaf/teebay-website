@@ -4,6 +4,7 @@ const resolvers = require('./resolvers/auth');
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const prisma = new PrismaClient();
 
