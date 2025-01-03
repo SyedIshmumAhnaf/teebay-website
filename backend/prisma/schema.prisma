@@ -12,13 +12,19 @@ model Product {
   name        String
   description String
   price       Float
-  category    String
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
+  categories  Category[]  @relation("ProductCategories")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([name, userId, category])
+  @@unique([name, userId])
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  products  Product[]  @relation("ProductCategories")
 }
 
 model User {

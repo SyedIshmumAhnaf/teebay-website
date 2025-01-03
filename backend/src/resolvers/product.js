@@ -10,18 +10,41 @@ const resolvers = {
           where: { id: parseInt(id) },
         });
       },
+      categories: async (_, __, { prisma }) => {
+        return await prisma.category.findMany();
+      },
     },
     Mutation: {
-      createProduct: async (_, { name, description, price, category }, { prisma, userId }) => {
-        if (!userId) throw new Error("Not authenticated");
+      createProduct: async (_, { name, description, price, categoryIds }, { prisma, userId }) => {
+        if (!userId) throw new ApolloError("Not authenticated", "UNAUTHENTICATED");
+
+        const parsedCategoryIds = categoryIds.map((id) => parseInt(id, 10));
+
+        const existingCategories = await prisma.category.findMany({
+          where: {
+            id: {
+              in: parsedCategoryIds
+            }
+          }
+        });
+
+        if(existingCategories.length !== parsedCategoryIds.length){
+          throw new ApolloError("Not all categories were found in the database", "BAD_USER_INPUT");
+        }
 
         const existingProduct = await prisma.product.findFirst({
-            where: {
-              name,
-              userId,
-              category,
+          where: {
+            name,
+            userId,
+            categories: {
+              some: {
+                id: {
+                  in: parsedCategoryIds,
+                },
+              },
             },
-        });
+          },
+        });        
           
         if (existingProduct) {
             throw new ApolloError(
@@ -29,39 +52,62 @@ const resolvers = {
                 "BAD_USER_INPUT",
                 {
                   field: "name",
-                  conflictCategory: "category",
+                  conflictCategory: "categories",
                 }
               );
               
         }
-          
   
         return await prisma.product.create({
           data: {
             name,
             description,
             price,
-            category,
-            userId,
+            user: {
+                connect: { id: userId },
+            },
+            categories: {
+              connect: parsedCategoryIds.map((id) => ({ id})),
+            },
           },
+          include: { categories: true },
         });
       },
-      updateProduct: async (_, { id, name, description, price, category }, { prisma, userId }) => {
+      updateProduct: async (_, { id, name, description, price, categoryIds }, { prisma, userId }) => {
         const product = await prisma.product.findUnique({ where: { id: parseInt(id) } });
   
-        if (!product) throw new Error("Product not found");
-        if (product.userId !== userId) throw new Error("Not authorized");
-  
+        if (!product) throw new ApolloError("Product not found", "NOT_FOUND");
+        if (product.userId !== userId) throw new ApolloError("Not authorized", "UNAUTHORIZED");
+
+        const parsedCategoryIds = categoryIds.map((id) => parseInt(id, 10));
+         const existingCategories = await prisma.category.findMany({
+          where: {
+            id: {
+              in: parsedCategoryIds
+            }
+          }
+        });
+          
+        if(existingCategories.length !== parsedCategoryIds.length){
+              throw new ApolloError("Not all categories were found in the database", "BAD_USER_INPUT");
+          }
+        
         return await prisma.product.update({
           where: { id: parseInt(id) },
-          data: { name, description, price, category },
+          data: { 
+            name, description, price, 
+            categories: {
+              set: parsedCategoryIds.map((id) => ({ id: parseInt(id) })),
+            }, 
+          },
+          include: { categories: true },
         });
       },
       deleteProduct: async (_, { id }, { prisma, userId }) => {
         const product = await prisma.product.findUnique({ where: { id: parseInt(id) } });
   
-        if (!product) throw new Error("Product not found");
-        if (product.userId !== userId) throw new Error("Not authorized");
+        if (!product) throw new ApolloError("Product not found", "NOT_FOUND");
+        if (product.userId !== userId) throw new ApolloError("Not authorized", "UNAUTHORIZED");
   
         await prisma.product.delete({ where: { id: parseInt(id) } });
   

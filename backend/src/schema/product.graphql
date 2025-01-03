@@ -3,19 +3,37 @@ type Product {
   name: String!
   description: String!
   price: Float!
-  category: String!
   user: User! 
+  categories: [Category!]!
   createdAt: String!
   updatedAt: String!
 }
 
+type Category {
+  id: ID!
+  name: String!
+  products: [Product!]!
+}
+
 type Query {
-  products(skip: Int, take: Int): [Product!]!
+  products(skip: Int, take: Int): [Product!]! 
   product(id: ID!): Product 
+  categories: [Category!]!
 }
 
 type Mutation {
-  createProduct(name: String!, description: String!, price: Float!, category: String!): Product!
-  updateProduct(id: ID!, name: String, description: String, price: Float, category: String): Product!
+  createProduct(
+    name: String!
+    description: String!
+    price: Float!
+    categoryIds: [ID!]!
+  ): Product!
+  updateProduct(
+    id: ID!
+    name: String
+    description: String
+    price: Float
+    categoryIds: [ID!]
+  ): Product!
   deleteProduct(id: ID!): String!
 }
